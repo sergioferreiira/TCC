@@ -1,5 +1,5 @@
 from django import forms
-from .models import Transacao, Conta
+from .models import Transacao, Conta, Recorrencia
 
 class TransacaoForm(forms.ModelForm):
     class Meta:
@@ -15,4 +15,15 @@ class ContaForm(forms.ModelForm):
         fields = ['saldo_atual']
         widgets = {
             'saldo_atual': forms.NumberInput(attrs={'step': '0.01'}),
+        }
+
+class RecorrenciaForm(forms.ModelForm):
+    class Meta:
+        model = Recorrencia
+        fields = ['titulo', 'tipo', 'categoria', 'valor', 'dia_vencimento', 'inicio', 'meses', 'ativo']
+        widgets = {
+            'inicio': forms.DateInput(attrs={'type': 'date'}),
+            'valor': forms.NumberInput(attrs={'step': '0.01'}),
+            'dia_vencimento': forms.NumberInput(attrs={'min': 1, 'max': 31}),
+            'meses': forms.NumberInput(attrs={'min': 0}),
         }
