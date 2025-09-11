@@ -5,8 +5,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),  # login/logout/reset
-    path('', include('financas.urls')),                     # app principal
+    path('accounts/', include('django.contrib.auth.urls')),  
+    path('', include('financas.urls')),                    
 ]
 
 if settings.DEBUG:

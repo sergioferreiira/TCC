@@ -1,13 +1,83 @@
-{% extends 'base.html' %}
-{% block title %}{{ titulo }} | Finanças{% endblock %}
+{% extends "financas/base.html" %}
+{% block title %}{{ titulo }} — Finanças{% endblock %}
+
 {% block content %}
-<h1 class="h4 mb-3">{{ titulo }}</h1>
-<form method="post" novalidate>
-  {% csrf_token %}
-  {{ form.as_p }}
-  <div class="mt-3">
-    <button class="btn btn-primary" type="submit">Salvar</button>
-    <a class="btn btn-secondary" href="{% url 'financas:lista' %}">Cancelar</a>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h4 class="mb-3">{{ titulo }}</h4>
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      <div class="col-12 col-md-6">
+        <label class="form-label">{{ form.titulo.label }}</label>
+        {{ form.titulo }}
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label">{{ form.tipo.label }}</label>
+        {{ form.tipo }}
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label">{{ form.categoria.label }}</label>
+        {{ form.categoria }}
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label">{{ form.valor.label }}</label>
+        {{ form.valor }}
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label">{{ form.data.label }}</label>
+        {{ form.data }}
+      </div>
+
+      <div class="col-12 col-md-3" id="row-status">
+        <label class="form-label">{{ form.status.label }}</label>
+        {{ form.status }}
+      </div>
+
+      <!-- Campo extra: só para categoria "variavel" -->
+      <div class="col-12 col-md-3" id="row-repetir" style="display:none;">
+        <label class="form-label">{{ form.repetir_meses.label }}</label>
+        {{ form.repetir_meses }}
+        <div class="form-text">{{ form.repetir_meses.help_text }}</div>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">{{ form.obs.label }}</label>
+        {{ form.obs }}
+      </div>
+
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-primary">Salvar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'financas:lista' %}">Voltar</a>
+      </div>
+    </form>
   </div>
-</form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const cat = document.querySelector('[name="categoria"]');
+  const statusRow = document.getElementById('row-status');
+  const repetirRow = document.getElementById('row-repetir');
+
+  function toggleFields(){
+    if (!cat) return;
+    const v = cat.value;
+    // salário: esconde status; variavel: mostra repetir_meses
+    if (statusRow) statusRow.style.display = (v === 'salario') ? 'none' : '';
+    if (repetirRow) repetirRow.style.display = (v === 'variavel') ? '' : 'none';
+  }
+  if (cat) {
+    cat.addEventListener('change', toggleFields);
+    toggleFields();
+  }
+})();
+</script>
 {% endblock %}
