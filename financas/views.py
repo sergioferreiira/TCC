@@ -87,11 +87,34 @@ def transacao_create(request):
     if request.method == "POST" and form.is_valid():
         obj = form.save(commit=False)
         obj.owner = request.user
-        obj.save()
+        obj.save()  
+
+        if obj.categoria == "variavel":
+            repetir = form.cleaned_data.get("repetir_meses") or 0
+            if repetir > 0:
+                y, m, d = obj.data.year, obj.data.month, obj.data.day
+                for i in range(1, repetir + 1):
+                    new_m = m + i
+                    new_y = y + (new_m - 1) // 12
+                    new_m = ((new_m - 1) % 12) + 1
+                    last_day = monthrange(new_y, new_m)[1]
+                    new_d = min(d, last_day)
+
+                    Transacao.objects.create(
+                        owner=request.user,
+                        recorrencia=obj.recorrencia,  
+                        titulo=obj.titulo,
+                        tipo=obj.tipo,                 
+                        categoria=obj.categoria,       
+                        valor=obj.valor,
+                        data=date(new_y, new_m, new_d),
+                        status="pendente",             
+                        obs=f"(gerado automaticamente - {i}º mês)",
+                    )
+
         messages.success(request, "Transação criada!")
         return redirect("financas:lista")
     return render(request, "financas/form.html", {"form": form, "titulo": "Nova transação"})
-
 
 @login_required
 def transacao_update(request, pk):
@@ -126,39 +149,3 @@ def conta_edit(request):
     return render(request, "financas/conta.html", {"form": form})
 
 
-@login_required
-def transacao_create(request):
-    form = TransacaoForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        obj = form.save(commit=False)
-        obj.owner = request.user
-        obj.save()  # salva o mês atual
-
-        # Se categoria variável e houver meses adicionais, cria cópias futuras como PENDENTES
-        if obj.categoria == "variavel":
-            repetir = form.cleaned_data.get("repetir_meses") or 0
-            if repetir > 0:
-                y, m, d = obj.data.year, obj.data.month, obj.data.day
-                for i in range(1, repetir + 1):
-                    # avança i meses
-                    new_m = m + i
-                    new_y = y + (new_m - 1) // 12
-                    new_m = ((new_m - 1) % 12) + 1
-                    last_day = monthrange(new_y, new_m)[1]
-                    new_d = min(d, last_day)
-
-                    Transacao.objects.create(
-                        owner=request.user,
-                        recorrencia=obj.recorrencia,  # normalmente None
-                        titulo=obj.titulo,
-                        tipo=obj.tipo,                 # mantém E/S
-                        categoria=obj.categoria,       # variavel
-                        valor=obj.valor,
-                        data=date(new_y, new_m, new_d),
-                        status="pendente",             # futuras sempre pendentes
-                        obs=f"(gerado automaticamente - {i}º mês)",
-                    )
-
-        messages.success(request, "Transação criada!")
-        return redirect("financas:lista")
-    return render(request, "financas/form.html", {"form": form, "titulo": "Nova transação"})

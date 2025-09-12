@@ -15,7 +15,6 @@ class TransacaoAdmin(admin.ModelAdmin):
     search_fields = ("titulo", "owner__username", "owner__email")
     ordering = ("-data", "-criado_em")
 
-    # regra extra: salário sempre Entrada e Pago
     def save_model(self, request, obj, form, change):
         if obj.categoria == "salario":
             obj.tipo = "E"

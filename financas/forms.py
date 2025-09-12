@@ -2,7 +2,6 @@ from django import forms
 from .models import Transacao, Conta, Recorrencia
 
 class TransacaoForm(forms.ModelForm):
-    # Campo extra (somente formulário)
     repetir_meses = forms.IntegerField(
         min_value=0, required=False, initial=0,
         label="Repetir por (meses adicionais)",
@@ -11,7 +10,7 @@ class TransacaoForm(forms.ModelForm):
 
     class Meta:
         model = Transacao
-        fields = ["titulo", "tipo", "categoria", "valor", "data", "status", "obs"]  # repetir_meses fica fora (não é do model)
+        fields = ["titulo", "tipo", "categoria", "valor", "data", "status", "obs"]  
         widgets = {
             "titulo":   forms.TextInput(attrs={"class": "form-control"}),
             "tipo":     forms.Select(attrs={"class": "form-select"}),
@@ -24,11 +23,9 @@ class TransacaoForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        # Regras do salário
         if cleaned.get("categoria") == "salario":
             cleaned["tipo"] = "E"
             cleaned["status"] = "pago"
-        # Normalizar repetir_meses
         if cleaned.get("repetir_meses") is None:
             cleaned["repetir_meses"] = 0
         return cleaned

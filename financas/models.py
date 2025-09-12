@@ -10,7 +10,6 @@ class Conta(models.Model):
     def __str__(self):
         return f"Conta de {self.owner} — Saldo: R$ {self.saldo_atual}"
 
-
 class Recorrencia(models.Model):
     TIPO_CHOICES = (("E", "Entrada"), ("S", "Saída"))
     CATEGORIAS = (
@@ -29,7 +28,7 @@ class Recorrencia(models.Model):
     valor = models.DecimalField(max_digits=12, decimal_places=2)
     dia_vencimento = models.PositiveSmallIntegerField(help_text="Dia do mês (1–31)")
     inicio = models.DateField(default=timezone.now, help_text="Mês/ano de início")
-    meses = models.PositiveSmallIntegerField(help_text="Duração em meses (ex.: 6). Use 0 para indefinido.", default=0)
+    meses = models.PositiveSmallIntegerField(help_text="Duração em meses", default=0)
     ativo = models.BooleanField(default=True)
 
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -51,7 +50,9 @@ class Recorrencia(models.Model):
     def save(self, *args, **kwargs):
         if self.categoria == "salario":
             self.tipo = "E"
+            self.status = "pago"
         super().save(*args, **kwargs)
+
 
 
 class Transacao(models.Model):
