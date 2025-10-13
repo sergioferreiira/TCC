@@ -1,12 +1,19 @@
 from datetime import date
 from calendar import monthrange
 from decimal import Decimal
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
-from .models import Transacao, Conta, Recorrencia
+from django.http import JsonResponse, HttpRequest, HttpResponse
+from django.views.decorators.http import require_GET
+from django.utils import timezone
+
+from .models import Transacao, Conta, Recorrencia, CotacaoCripto
 from .forms import TransacaoForm, ContaForm, RecorrenciaForm
+from .api.coinmarketcap import fetch_quotes, CoinMarketCapError
+
 
 def _mes_intervalo(yyyy_mm: str | None):
     if yyyy_mm:
@@ -26,7 +33,9 @@ def _gerar_recorrencias_mes(owner, ano: int, mes: int) -> int:
     for r in recs:
         if not r.ativa_no_mes(ano, mes):
             continue
-        exists = Transacao.objects.filter(owner=owner, recorrencia=r, data__year=ano, data__month=mes).exists()
+        exists = Transacao.objects.filter(
+            owner=owner, recorrencia=r, data__year=ano, data__month=mes
+        ).exists()
         if exists:
             continue
         dia = min(r.dia_vencimento, last_day)
@@ -58,12 +67,22 @@ def transacao_list(request):
         qs = qs.filter(categoria=categoria)
     itens = qs.order_by("-data", "-criado_em")
 
-    entradas_mes_pagas = qs.filter(tipo="E", status="pago").aggregate(v=Sum("valor"))["v"] or Decimal("0")
-    saidas_mes_pagas = qs.filter(tipo="S", status="pago").aggregate(v=Sum("valor"))["v"] or Decimal("0")
-    pendentes_mes_total = qs.filter(status="pendente").aggregate(v=Sum("valor"))["v"] or Decimal("0")
+    entradas_mes_pagas = qs.filter(tipo="E", status="pago").aggregate(v=Sum("valor"))[
+        "v"
+    ] or Decimal("0")
+    saidas_mes_pagas = qs.filter(tipo="S", status="pago").aggregate(v=Sum("valor"))[
+        "v"
+    ] or Decimal("0")
+    pendentes_mes_total = qs.filter(status="pendente").aggregate(v=Sum("valor"))[
+        "v"
+    ] or Decimal("0")
 
-    entradas_hist = Transacao.objects.filter(owner=request.user, status="pago", tipo="E", data__lte=fim).aggregate(v=Sum("valor"))["v"] or Decimal("0")
-    saidas_hist = Transacao.objects.filter(owner=request.user, status="pago", tipo="S", data__lte=fim).aggregate(v=Sum("valor"))["v"] or Decimal("0")
+    entradas_hist = Transacao.objects.filter(
+        owner=request.user, status="pago", tipo="E", data__lte=fim
+    ).aggregate(v=Sum("valor"))["v"] or Decimal("0")
+    saidas_hist = Transacao.objects.filter(
+        owner=request.user, status="pago", tipo="S", data__lte=fim
+    ).aggregate(v=Sum("valor"))["v"] or Decimal("0")
     saldo_real = entradas_hist - saidas_hist
 
     saldo_comprometido = saldo_real - pendentes_mes_total
@@ -87,7 +106,7 @@ def transacao_create(request):
     if request.method == "POST" and form.is_valid():
         obj = form.save(commit=False)
         obj.owner = request.user
-        obj.save()  
+        obj.save()
 
         if obj.categoria == "variavel":
             repetir = form.cleaned_data.get("repetir_meses") or 0
@@ -102,19 +121,22 @@ def transacao_create(request):
 
                     Transacao.objects.create(
                         owner=request.user,
-                        recorrencia=obj.recorrencia,  
+                        recorrencia=obj.recorrencia,
                         titulo=obj.titulo,
-                        tipo=obj.tipo,                 
-                        categoria=obj.categoria,       
+                        tipo=obj.tipo,
+                        categoria=obj.categoria,
                         valor=obj.valor,
                         data=date(new_y, new_m, new_d),
-                        status="pendente",             
+                        status="pendente",
                         obs=f"(gerado automaticamente - {i}º mês)",
                     )
 
         messages.success(request, "Transação criada!")
         return redirect("financas:lista")
-    return render(request, "financas/form.html", {"form": form, "titulo": "Nova transação"})
+    return render(
+        request, "financas/form.html", {"form": form, "titulo": "Nova transação"}
+    )
+
 
 @login_required
 def transacao_update(request, pk):
@@ -125,7 +147,9 @@ def transacao_update(request, pk):
         obj.save()
         messages.success(request, "Transação atualizada!")
         return redirect("financas:lista")
-    return render(request, "financas/form.html", {"form": form, "titulo": "Editar transação"})
+    return render(
+        request, "financas/form.html", {"form": form, "titulo": "Editar transação"}
+    )
 
 
 @login_required
@@ -140,7 +164,9 @@ def transacao_delete(request, pk):
 
 @login_required
 def conta_edit(request):
-    conta, _ = Conta.objects.get_or_create(owner=request.user, defaults={"saldo_atual": 0})
+    conta, _ = Conta.objects.get_or_create(
+        owner=request.user, defaults={"saldo_atual": 0}
+    )
     form = ContaForm(request.POST or None, instance=conta)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -149,3 +175,61 @@ def conta_edit(request):
     return render(request, "financas/conta.html", {"form": form})
 
 
+# -----------------------------
+# --- MÓDULO DE CRIPTOMOEDAS ---
+# -----------------------------
+
+
+@login_required
+def criptos_view(request: HttpRequest) -> HttpResponse:
+    historico = CotacaoCripto.objects.order_by("-data_consulta")[:50]
+    return render(request, "financas/criptos.html", {"historico": historico})
+
+
+@require_GET
+@login_required
+def criptos_atualizar_view(request: HttpRequest) -> JsonResponse:
+    """
+    Endpoint AJAX:
+      1) Consulta CoinMarketCap (BTC, ETH por padrão, em USD)
+      2) Salva no banco
+      3) Retorna JSON com os valores persistidos
+    """
+    symbols_param = request.GET.get("symbols", "BTC,ETH")
+    convert = request.GET.get("convert", "USD")
+    symbols = [s.strip().upper() for s in symbols_param.split(",") if s.strip()]
+
+    try:
+        quotes = fetch_quotes(symbols=symbols, convert=convert)
+    except CoinMarketCapError as ex:
+        return JsonResponse({"ok": False, "error": str(ex)}, status=400)
+
+    saved = []
+    now = timezone.now()
+
+    for sym in symbols:
+        q = quotes.get(sym)
+        if not q:
+            continue
+        obj = CotacaoCripto.objects.create(
+            simbolo=sym,
+            nome=q.get("name", sym),
+            moeda_fiat=convert.upper(),
+            preco=Decimal(str(q["price"])),
+            variacao_24h=Decimal(str(q.get("percent_change_24h", 0.0))),
+        )
+        saved.append(
+            {
+                "id": obj.id,
+                "simbolo": obj.simbolo,
+                "nome": obj.nome,
+                "moeda_fiat": obj.moeda_fiat,
+                "preco": float(obj.preco),
+                "variacao_24h": float(obj.variacao_24h),
+                "data_consulta": obj.data_consulta.isoformat(),
+            }
+        )
+
+    return JsonResponse(
+        {"ok": True, "saved": saved, "count": len(saved), "updated_at": now.isoformat()}
+    )

@@ -9,4 +9,10 @@ urlpatterns = [
     path("editar/<int:pk>/", views.transacao_update, name="transacao_update"),
     path("deletar/<int:pk>/", views.transacao_delete, name="transacao_delete"),
     path("conta/", views.conta_edit, name="conta_edit"),
+    path("criptos/", views.criptos_view, name="criptos_view"),
+    path(
+        "criptos/atualizar/",
+        views.criptos_atualizar_view,
+        name="criptos_atualizar_view",
+    ),
 ]
