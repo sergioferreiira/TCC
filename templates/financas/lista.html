@@ -23,12 +23,22 @@
     </select>
   </div>
   <div class="col-12 col-sm-4 d-flex gap-2">
-    <button class="btn btn-primary mt-auto" type="submit">Filtrar</button>
-    <a class="btn btn-success mt-auto ms-auto" href="{% url 'financas:transacao_create' %}">Nova</a>
-    <a class="btn btn-outline-primary mt-auto" href="{% url 'financas:criptos_view' %}">
-  Criptomoedas
-</a>
+      <button class="btn btn-primary mt-auto" type="submit">Filtrar</button>
+
+      <a class="btn btn-success mt-auto ms-auto" href="{% url 'financas:transacao_create' %}">
+        Nova
+      </a>
+
+      <a class="btn btn-outline-primary mt-auto" href="{% url 'financas:criptos_view' %}">
+        Criptomoedas
+      </a>
+
+      <!-- ✅ BOTÃO NOVO PARA METAS FINANCEIRAS -->
+      <a class="btn btn-outline-secondary mt-auto" href="{% url 'financas:metas_list' %}">
+        Metas
+      </a>
   </div>
+
 </form>
 
 <div class="row g-3 mb-4">

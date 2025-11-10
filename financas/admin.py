@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Conta, Transacao, Recorrencia, CotacaoCripto
+from .models import Conta, Transacao, Recorrencia, CotacaoCripto, MetaFinanceira
 
 
 @admin.register(Conta)
@@ -67,3 +67,6 @@ class CotacaoCriptoAdmin(admin.ModelAdmin):
     list_filter = ("simbolo", "moeda_fiat", "data_consulta")
     search_fields = ("simbolo", "nome")
     ordering = ("-data_consulta",)
+
+
+admin.site.register(MetaFinanceira)

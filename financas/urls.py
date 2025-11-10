@@ -15,4 +15,8 @@ urlpatterns = [
         views.criptos_atualizar_view,
         name="criptos_atualizar_view",
     ),
+    path("metas/", views.metas_list, name="metas_list"),
+    path("metas/nova/", views.metas_create, name="metas_create"),
+    path("metas/editar/<int:pk>/", views.metas_update, name="metas_update"),
+    path("metas/excluir/<int:pk>/", views.metas_delete, name="metas_delete"),
 ]

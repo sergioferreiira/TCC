@@ -10,7 +10,7 @@ from django.http import JsonResponse, HttpRequest, HttpResponse
 from django.views.decorators.http import require_GET
 from django.utils import timezone
 
-from .models import Transacao, Conta, Recorrencia, CotacaoCripto
+from .models import Transacao, Conta, Recorrencia, CotacaoCripto, MetaFinanceira
 from .forms import TransacaoForm, ContaForm, RecorrenciaForm
 from .api.coinmarketcap import fetch_quotes, CoinMarketCapError
 
@@ -233,3 +233,33 @@ def criptos_atualizar_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse(
         {"ok": True, "saved": saved, "count": len(saved), "updated_at": now.isoformat()}
     )
+
+
+def metas_list(request):
+    metas = MetaFinanceira.objects.all().order_by("-criado_em")
+    return render(request, "financas/metas_list.html", {"metas": metas})
+
+
+def metas_create(request):
+    if request.method == "POST":
+        titulo = request.POST.get("titulo")
+        valor_objetivo = request.POST.get("valor_objetivo")
+        MetaFinanceira.objects.create(titulo=titulo, valor_objetivo=valor_objetivo)
+        return redirect("financas:metas_list")
+    return render(request, "financas/metas_form.html")
+
+
+def metas_update(request, pk):
+    meta = get_object_or_404(MetaFinanceira, pk=pk)
+    if request.method == "POST":
+        meta.titulo = request.POST.get("titulo")
+        meta.valor_objetivo = request.POST.get("valor_objetivo")
+        meta.save()
+        return redirect("financas:metas_list")
+    return render(request, "financas/metas_form.html", {"meta": meta})
+
+
+def metas_delete(request, pk):
+    meta = get_object_or_404(MetaFinanceira, pk=pk)
+    meta.delete()
+    return redirect("financas:metas_list")

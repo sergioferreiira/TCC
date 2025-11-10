@@ -1,0 +1,20 @@
+{% extends "financas/base.html" %}
+
+{% block content %}
+<h2>Metas Financeiras</h2>
+
+<a href="{% url 'financas:metas_create' %}">+ Nova meta</a>
+
+<ul>
+  {% for m in metas %}
+  <li>
+    {{ m.titulo }} — <strong>R$ {{ m.valor_objetivo }}</strong>
+    <a href="{% url 'financas:metas_update' m.pk %}">Editar</a>
+    <a href="{% url 'financas:metas_delete' m.pk %}" style="color:red;">Excluir</a>
+  </li>
+  {% empty %}
+  <li>Nenhuma meta cadastrada.</li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

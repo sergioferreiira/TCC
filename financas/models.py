@@ -146,3 +146,12 @@ class CotacaoCripto(models.Model):
 
     def __str__(self) -> str:
         return f"{self.simbolo} {self.preco} {self.moeda_fiat} @ {self.data_consulta:%Y-%m-%d %H:%M:%S}"
+
+
+class MetaFinanceira(models.Model):
+    titulo = models.CharField(max_length=120)
+    valor_objetivo = models.DecimalField(max_digits=12, decimal_places=2)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.titulo} - R$ {self.valor_objetivo}"
