@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import Conta, Transacao, Recorrencia, CotacaoCripto, MetaFinanceira
+from .models import (
+    Conta,
+    Transacao,
+    Recorrencia,
+    CotacaoCripto,
+    MetaFinanceira,
+    ChatMessage,
+)
 
 
 @admin.register(Conta)
@@ -70,3 +77,10 @@ class CotacaoCriptoAdmin(admin.ModelAdmin):
 
 
 admin.site.register(MetaFinanceira)
+
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ("autor", "texto", "criado_em")
+    list_filter = ("autor", "criado_em")
+    search_fields = ("texto",)

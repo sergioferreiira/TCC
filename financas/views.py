@@ -14,6 +14,9 @@ from .models import Transacao, Conta, Recorrencia, CotacaoCripto, MetaFinanceira
 from .forms import TransacaoForm, ContaForm, RecorrenciaForm
 from .api.coinmarketcap import fetch_quotes, CoinMarketCapError
 
+from google import genai
+from .models import ChatMessage
+
 
 def _mes_intervalo(yyyy_mm: str | None):
     if yyyy_mm:
@@ -263,3 +266,51 @@ def metas_delete(request, pk):
     meta = get_object_or_404(MetaFinanceira, pk=pk)
     meta.delete()
     return redirect("financas:metas_list")
+
+
+# --------------------------------------
+# --- MÓDULO INTELIGENCIA ARTIFICIAL ---
+# --------------------------------------
+
+
+def inteligencia_artificial(request):
+
+    if request.method == "POST":
+        pergunta = request.POST.get("pergunta")
+
+        ChatMessage.objects.create(autor="user", texto=pergunta)
+
+        client = genai.Client(api_key="AIzaSyBP8q7Ay-lCjETRsWKNe_2w6TKet0UmxyU")
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=f"""
+            Você é uma inteligência artificial especializada exclusivamente em FINANÇAS.
+            A partir de agora, você deve responder SOMENTE perguntas relacionadas a:
+
+            - controle financeiro
+            - orçamento pessoal
+            - despesas e receitas
+            - investimentos básicos
+            - planejamento financeiro
+            - conceitos financeiros em geral
+            - sistemas de finanças utilizados no projeto
+
+            INSTRUÇÕES IMPORTANTES (NÃO IGNORAR):
+            1. Se a pergunta do usuário estiver relacionada a finanças → responda normalmente.
+            2. Se a pergunta NÃO tiver relação com finanças → responda exatamente:
+            "Desculpe, fui configurada para responder apenas perguntas sobre finanças neste sistema."
+            3. Nunca quebre essa regra, mesmo que o usuário insista.
+            4. Mantenha respostas claras, objetivas e corretas.
+            5. Adapte o nível técnico conforme a pergunta do usuário.
+
+            Pergunta do usuário: {pergunta}
+            """,
+        ).text
+
+        ChatMessage.objects.create(autor="ai", texto=response)
+
+    # Carrega todo o histórico do BD
+    mensagens = ChatMessage.objects.all().order_by("criado_em")
+
+    return render(request, "financas/inteligencia_artificial.html", {"chat": mensagens})

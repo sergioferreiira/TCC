@@ -155,3 +155,12 @@ class MetaFinanceira(models.Model):
 
     def __str__(self):
         return f"{self.titulo} - R$ {self.valor_objetivo}"
+
+
+class ChatMessage(models.Model):
+    autor = models.CharField(max_length=10)  # "user" ou "ai"
+    texto = models.TextField()
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.autor}: {self.texto[:40]}"

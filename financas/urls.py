@@ -19,4 +19,5 @@ urlpatterns = [
     path("metas/nova/", views.metas_create, name="metas_create"),
     path("metas/editar/<int:pk>/", views.metas_update, name="metas_update"),
     path("metas/excluir/<int:pk>/", views.metas_delete, name="metas_delete"),
+    path("gemini/", views.inteligencia_artificial, name="inteligencia_artificial"),
 ]

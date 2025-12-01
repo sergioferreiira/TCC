@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Pergunte à IA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .top-bar a {
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 25px;
+        }
+
+        .chat-box {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+
+        .msg {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .user {
+            background: #d1e7ff;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .ia {
+            background: #e8e8e8;
+            margin-right: auto;
+        }
+
+        form {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type=text] {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            background: #333;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- BOTÃO VOLTAR -->
+    <div class="top-bar">
+        <a href="/">Voltar</a>
+    </div>
+
+    <!-- TÍTULO -->
+    <h2>Pergunte à IA</h2>
+
+    <!-- CHAT -->
+    <div class="chat-box">
+        {% for item in chat %}
+            {% if item.autor == 'user' %}
+                <div class="msg user">{{ item.texto }}</div>
+            {% else %}
+                <div class="msg ia">{{ item.texto }}</div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- FORMULÁRIO -->
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="pergunta" placeholder="Digite sua pergunta..." required>
+        <button type="submit">Enviar</button>
+    </form>
+
+</div>
+
+</body>
+</html>
