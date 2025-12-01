@@ -1,127 +1,165 @@
-# 💼 TCC — Sistema de Finanças (Django)
+💼 TCC — Sistema de Finanças Pessoais + Integração com IA (Django + Gemini)
 
-Projeto de controle financeiro pessoal com **transações**, **conta**, **recorrências** e módulo opcional de **cotações de criptomoedas** (CoinMarketCap).
+Sistema completo de gestão financeira pessoal, com módulo de análise inteligente via IA, controle de transações, recorrências, metas, saldo, e painel com métricas. Possui ainda um módulo opcional de cotações de criptomoedas com histórico salvo no banco.
 
----
+📌 Recursos Principais
+💰 1. Transações
 
-## 🔎 Visão Geral
+Entradas e saídas
 
-- Cadastro e gestão de **transações** (entradas/saídas, status e categorias).
-- **Geração automática** de transações a partir de **recorrências** (ex.: salário).
-- Cálculos de **saldo real** e **saldo comprometido**.
-- **Filtros** por mês e categoria + **dashboard** com métricas.
-- **Módulo Criptos**: consulta preços em tempo real, salva histórico e exibe no front.
+Categorias, status e datas
 
----
+Edição e exclusão
 
-## 🧱 Tecnologias
+Filtro por mês e categoria
 
-- **Python / Django**
-- **Bootstrap** (templates)
-- **SQLite/PostgreSQL** (Django ORM)
-- **Requests** (integração HTTP)
-- (Opcional) **CoinMarketCap API**
+🔄 2. Recorrências
 
----
+Cadastro de despesas/receitas mensais
 
-## 🚀 Como rodar
+Geração automática de transações
 
-```bash
-# 1) Crie e ative o venv
+Controle de ativação por mês
+
+🎯 3. Metas Financeiras
+
+Criação de metas com valor objetivo
+
+Salvo por usuário
+
+🧾 4. Conta
+
+Saldo atual
+
+Integração com transações
+
+📊 5. Dashboard
+
+Gráficos e métricas automáticas:
+
+Total de entradas/saídas
+
+Saldo real
+
+Saldo comprometido
+
+Metas
+
+🤖 6. Chat Inteligente (Gemini IA) — NOVO
+
+Assistente financeiro integrado ao sistema.
+
+O usuário pode:
+
+Tirar dúvidas financeiras
+
+Receber recomendações
+
+Interpretar transações
+
+Analisar despesas, metas e padrões
+
+O chat é restrito exclusivamente ao tema financeiro, por segurança e foco acadêmico.
+
+🪙 7. Módulo de Criptomoedas (Opcional)
+
+Consulta preços (CoinMarketCap API)
+
+Armazena histórico
+
+Exibe gráfico por data
+
+🧠 IA Integrada (Gemini) — Como funciona
+
+O sistema possui uma rota dedicada ao chat:
+
+/gemini/
+
+Fluxo:
+
+O usuário envia uma pergunta.
+
+A view monta um prompt seguro e restrito ao tema financeiro.
+
+O Gemini responde sob regras específicas:
+
+Não sair do tema financeiro.
+
+Não responder assuntos externos.
+
+Respostas claras e didáticas.
+
+A resposta é exibida no front-end imediatamente.
+
+A pergunta e resposta são armazenadas no banco (para avaliação e histórico).
+
+🔒 Prompt usado (versão aprimorada e profissional)
+Você é um assistente financeiro integrado a um sistema de gestão pessoal.
+Responda somente perguntas diretamente relacionadas a dinheiro, finanças,
+orçamento, dívidas, investimentos, contas, criptomoedas, metas, salário,
+balanço mensal, planejamento financeiro ou temas correlatos.
+
+Se o usuário perguntar algo fora desse escopo, responda educadamente:
+"Sou um assistente financeiro e só posso responder dúvidas sobre finanças."
+
+Sempre mantenha respostas:
+- Objetivas
+- Técnicas quando necessário
+- Simples de entender
+- Baseadas apenas na pergunta do usuário e no domínio financeiro
+
+🧱 Tecnologias
+
+Python 3 / Django 4
+
+Gemini API (Google AI)
+
+Bootstrap 5
+
+JavaScript / Fetch API
+
+SQLite ou PostgreSQL
+
+Requests (HTTP / APIs externas)
+
+🛠 Como rodar o projeto
+# 1. Criar e ativar venv
 python -m venv venv
-# Windows:
+# Windows
 venv\Scripts\activate
-# Linux/Mac:
+# Linux/Mac
 source venv/bin/activate
 
-# 2) Instale dependências
+# 2. Instalar dependências
 pip install -r requirements.txt
 
-# 3) Migre o banco
+# 3. Criar banco
 python manage.py migrate
 
-# 4) Crie superusuário
+# 4. Criar usuário admin
 python manage.py createsuperuser
 
-# 5) Rode o servidor
+# 5. Rodar servidor
 python manage.py runserver
-```
 
-Acesse: `http://127.0.0.1:8000/`
 
----
+Acesse:
+http://127.0.0.1:8000/
 
-## 📦 Estrutura
+🔑 Configurar Gemini API
 
-```
-TCC/
-├─ config/
-│  └─ (settings/urls/etc.)
-├─ financas/
-│  ├─ api/
-│  │  ├─ __init__.py
-│  │  └─ coinmarketcap.py
-│  ├─ migrations/
-│  ├─ static/
-│  │  └─ js/
-│  │     └─ criptos.js
-│  ├─ __init__.py
-│  ├─ admin.py
-│  ├─ apps.py
-│  ├─ forms.py
-│  ├─ models.py
-│  ├─ tests.py
-│  ├─ urls.py
-│  └─ views.py
-├─ templates/
-│  └─ financas/
-│     ├─ base.html
-│     ├─ lista.html
-│     ├─ form.html
-│     ├─ conta.html
-│     ├─ confirm_delete.html
-│     └─ criptos.html
-│  └─ registration/
-│     └─ login.html
-├─ venv/
-```
+No settings.py:
 
----
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-## 🪙 Módulo Opcional: Criptomoedas
 
-- **O que faz:** consulta **BTC/ETH** (ou outros símbolos) em tempo real, **salva no banco** e exibe.
-- **Endpoint interno:** `/criptos/atualizar/?symbols=BTC,ETH&convert=USD`
-- **Página dedicada:** `/criptos/` (com botão **Checar Criptos** + histórico)
-- **API Key** no servidor:
-  ```python
-  # settings.py
-  COINMARKETCAP_API_KEY = os.environ.get("CMC_API_KEY", "")
-  ```
-  ```powershell
-  # Windows PowerShell
-  $env:CMC_API_KEY="SUA_CHAVE_AQUI"
-  ```
+No Windows PowerShell:
 
----
+$env:GEMINI_API_KEY="SUA_CHAVE_AQUI"
 
-## 🧭 Uso
+Chat IA
+/gemini/
 
-- Dashboard: filtrar por **mês** e **categoria**; criar/editar/excluir transações.
-- Recorrências: o sistema **gera automaticamente** lançamentos do mês.
-- Criptos: acessar `/criptos/` ou usar o **botão do dashboard** (consulta rápida).
+📄 Licença
 
----
-
-## ✅ Teste rápido
-
-- **JSON:** `http://127.0.0.1:8000/criptos/atualizar/?symbols=BTC,ETH&convert=USD`
-- **Página:** `http://127.0.0.1:8000/criptos/`
-
-> Necessário usuário autenticado.
-
----
-
-## 📄 Licença
-
-Projeto acadêmico (TCC). Uso educacional.
+Projeto acadêmico desenvolvido exclusivamente para fins educacionais.
